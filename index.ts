@@ -1,30 +1,27 @@
 import axios from "axios";
 import { Agent } from "https";
+import { WebSocket } from "ws";
 import { getLockfileLocation, parseLockfile } from "./lockfile-watcher";
 
 process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
 
 type Method = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
-type Endpoint = `${Method} ${string}`;
 
 const agent = new Agent({
   rejectUnauthorized: false,
 });
 
-const PASSWORD = process.env.PASSWORD;
-const PORT = process.env.PORT;
-
 const BASE_URL = "https://127.0.0.1";
-const URL_ADDRESS = `${BASE_URL}:${PORT}`;
-const NAME = "riot";
 
-const auth = Buffer.from(`${NAME}:${PASSWORD}`).toString("base64");
-
-const sendRequest = async (endpoint: Endpoint) => {
-  const [method, path] = endpoint.split(" ");
+export const callAPI = async (
+  method: Method,
+  path: string,
+  auth: string,
+  port: number
+) => {
   try {
     const { data } = await axios.request({
-      url: URL_ADDRESS + path,
+      url: `${BASE_URL}:${port}` + path,
       method,
       httpsAgent: agent,
       withCredentials: true,
@@ -32,15 +29,32 @@ const sendRequest = async (endpoint: Endpoint) => {
         Authorization: `Basic ${auth}`,
       },
     });
-    console.log(data);
-    // return JSON.parse(data);
+    return data;
   } catch (error) {
     console.log(error);
   }
 };
 
 (async () => {
-  console.log(await parseLockfile(await getLockfileLocation()));
+  try {
+    const { port, password } = await parseLockfile(await getLockfileLocation());
+    console.log({ port, password });
+    const auth = Buffer.from(`riot:${password}`).toString("base64");
+    const ws = new WebSocket(
+      `wss://riot:${password}@127.0.0.1:${port}/`,
+      "wamp"
+    );
+    ws.on("open", () => {
+      const json = JSON.stringify([5, "OnJsonApiEvent"]);
+      ws.send(json);
+    });
+    ws.on("message", (data) => {
+      console.log(JSON.parse(data.toString()));
+    });
+    ws.on("error", (error) => {
+      console.log(error);
+    });
+  } catch (error) {
+    console.log(error);
+  }
 })();
-
-module.exports = sendRequest;
