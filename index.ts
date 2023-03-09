@@ -1,7 +1,6 @@
 import axios from "axios";
 import { Agent } from "https";
-import * as dotenv from "dotenv";
-dotenv.config();
+import { getLockfileLocation, parseLockfile } from "./lockfile-watcher";
 
 process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
 
@@ -32,7 +31,6 @@ const sendRequest = async (endpoint: Endpoint) => {
       headers: {
         Authorization: `Basic ${auth}`,
       },
-      data: ["5", "JsonApi"],
     });
     console.log(data);
     // return JSON.parse(data);
@@ -42,7 +40,7 @@ const sendRequest = async (endpoint: Endpoint) => {
 };
 
 (async () => {
-  await sendRequest("GET /lol-rso-auth/v1/authorization/userinfo");
+  console.log(await parseLockfile(await getLockfileLocation()));
 })();
 
 module.exports = sendRequest;
