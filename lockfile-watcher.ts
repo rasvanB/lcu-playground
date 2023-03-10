@@ -10,14 +10,16 @@ const getProcessLocation = (processName: string): Promise<string> => {
   return new Promise((resolve, reject) => {
     const listCommand = `wmic process where name='${processName}' get commandline`;
 
-    exec(listCommand, (err, stdout: string, _) => {
-      if (err) reject(err);
-      let output = stdout.replace("CommandLine", "").trim();
+    exec(listCommand, (err, stdout: string, stderr) => {
+      if (err || !stdout || stderr) reject(err);
+
+      const output = stdout.replace("CommandLine", "").trim();
 
       if (output.includes('"')) {
         resolve(output.split('"')[1].replace(processName, ""));
         return;
       }
+
       reject("Process not found");
     });
   });
