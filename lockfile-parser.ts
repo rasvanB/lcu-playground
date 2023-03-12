@@ -42,8 +42,11 @@ export const parseLockfile = async (path: string) => {
     const fileData = fs.readFileSync(path, "utf8").split(":");
     const parsedData = lockfileSchema.parse(fileData);
     return {
+      processName: parsedData[0],
+      pid: Number(parsedData[1]),
       port: Number(parsedData[2]),
       password: parsedData[3],
+      protocol: parsedData[4],
     };
   } catch (error) {
     throw new Error("Error reading lockfile");
