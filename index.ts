@@ -1,7 +1,7 @@
 import axios from "axios";
 import { Agent } from "https";
-import { WebSocket } from "ws";
-import { getLockfileLocation, parseLockfile } from "./lockfile-watcher";
+import { createLCUWebSocket } from "./lcu-websocket";
+import { getLockfileLocation, parseLockfile } from "./lockfile-parser";
 
 process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
 
@@ -40,19 +40,9 @@ export const callAPI = async (
     const { port, password } = await parseLockfile(await getLockfileLocation());
     console.log({ port, password });
     const auth = Buffer.from(`riot:${password}`).toString("base64");
-    const ws = new WebSocket(
-      `wss://riot:${password}@127.0.0.1:${port}/`,
-      "wamp"
-    );
-    ws.on("open", () => {
-      const json = JSON.stringify([5, "OnJsonApiEvent"]);
-      ws.send(json);
-    });
+    const ws = createLCUWebSocket({ port, password });
     ws.on("message", (data) => {
       console.log(JSON.parse(data.toString()));
-    });
-    ws.on("error", (error) => {
-      console.log(error);
     });
   } catch (error) {
     console.log(error);
