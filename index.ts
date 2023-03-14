@@ -16,9 +16,10 @@ const BASE_URL = "https://127.0.0.1";
 export const callAPI = async (
   method: Method,
   path: string,
-  auth: string,
-  port: number
+  port: number,
+  password: string,
 ) => {
+  const auth = Buffer.from(`riot:${password}`).toString("base64");
   try {
     const { data } = await axios.request({
       url: `${BASE_URL}:${port}` + path,
@@ -38,8 +39,6 @@ export const callAPI = async (
 (async () => {
   try {
     const { port, password } = await parseLockfile(await getLockfileLocation());
-    console.log({ port, password });
-    const auth = Buffer.from(`riot:${password}`).toString("base64");
     const ws = createLCUWebSocket({ port, password });
     ws.on("message", (data) => {
       console.log(JSON.parse(data.toString()));
