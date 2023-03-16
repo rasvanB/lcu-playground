@@ -12,8 +12,7 @@ export const createLCUWebSocket = (config: LCUWebSocketConfig) => {
   );
 
   ws.on("open", () => {
-    const json = JSON.stringify([5, "OnJsonApiEvent"]);
-    ws.send(json);
+    ws.send(JSON.stringify([5, "OnJsonApiEvent"]));
   });
 
   ws.on("error", (error) => {

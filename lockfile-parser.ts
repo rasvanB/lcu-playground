@@ -11,7 +11,7 @@ const getProcessLocation = (processName: string): Promise<string> => {
     const listCommand = `wmic process where name='${processName}' get commandline`;
 
     exec(listCommand, (err, stdout: string, stderr) => {
-      if (err || !stdout || stderr) reject(err);
+      if (err || !stdout || stderr) reject(new Error("Error running wmic command"));
 
       const output = stdout.replace("CommandLine", "").trim();
 
